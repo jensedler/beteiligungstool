@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Reviews{% endblock %}
+{% block content %}
+<h2 class="mb-4">Konzepte zur Pruefung</h2>
+
+{% if not konzepte %}
+<div class="alert alert-info">Keine Konzepte zur Pruefung vorhanden.</div>
+{% else %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Titel</th>
+                <th>Fachamt</th>
+                <th>Status</th>
+                <th>Eingereicht</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for k in konzepte %}
+        <tr>
+            <td>{{ k.title }}</td>
+            <td>{{ k.author.name }} {% if k.author.department %}({{ k.author.department }}){% endif %}</td>
+            <td>
+                <span class="status-{{ k.status }}">
+                    {% if k.status == 'submitted' %}Eingereicht
+                    {% elif k.status == 'in_review' %}In Pruefung
+                    {% elif k.status == 'returned' %}Zurueckgesendet
+                    {% elif k.status == 'final' %}Finalisiert
+                    {% endif %}
+                </span>
+            </td>
+            <td>{{ k.submitted_at.strftime('%d.%m.%Y %H:%M') if k.submitted_at else '-' }}</td>
+            <td>
+                <a href="{{ url_for('review.detail', konzept_id=k.id) }}" class="btn btn-sm btn-outline-primary">Review</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

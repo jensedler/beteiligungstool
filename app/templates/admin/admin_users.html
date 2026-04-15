@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Benutzerverwaltung{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Benutzerverwaltung</h2>
+    <a href="{{ url_for('admin.user_create') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Neuer Benutzer
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Abteilung</th><th>Aktiv</th><th>Aktionen</th></tr>
+        </thead>
+        <tbody>
+        {% for u in users %}
+        <tr>
+            <td>{{ u.name }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.role }}</td>
+            <td>{{ u.department or '-' }}</td>
+            <td>{{ 'Ja' if u.is_active else 'Nein' }}</td>
+            <td><a href="{{ url_for('admin.user_edit', user_id=u.id) }}" class="btn btn-sm btn-outline-secondary">Bearbeiten</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

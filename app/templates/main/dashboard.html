@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Dashboard</h2>
+    {% if current_user.is_fachamt or current_user.is_admin %}
+    <a href="{{ url_for('konzept.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Neues Konzept
+    </a>
+    {% endif %}
+</div>
+
+{% if not konzepte %}
+<div class="alert alert-info">Noch keine Konzepte vorhanden.</div>
+{% else %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Titel</th>
+                <th>Erstellt von</th>
+                <th>Status</th>
+                <th>Aktualisiert</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for k in konzepte %}
+            <tr>
+                <td>{{ k.title }}</td>
+                <td>{{ k.author.name }}</td>
+                <td>
+                    <span class="status-{{ k.status }}">
+                        {% if k.status == 'draft' %}Entwurf
+                        {% elif k.status == 'submitted' %}Eingereicht
+                        {% elif k.status == 'in_review' %}In Pruefung
+                        {% elif k.status == 'returned' %}Zurueckgesendet
+                        {% elif k.status == 'final' %}Finalisiert
+                        {% endif %}
+                    </span>
+                </td>
+                <td>{{ k.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('konzept.view', konzept_id=k.id) }}" class="btn btn-sm btn-outline-primary">Ansehen</a>
+                    {% if k.status in ('draft', 'returned') and k.author_id == current_user.id %}
+                    <a href="{{ url_for('konzept.edit', konzept_id=k.id) }}" class="btn btn-sm btn-outline-secondary">Bearbeiten</a>
+                    {% endif %}
+                    {% if (current_user.is_db_team or current_user.is_admin) and k.status in ('submitted', 'in_review') %}
+                    <a href="{{ url_for('review.detail', konzept_id=k.id) }}" class="btn btn-sm btn-outline-warning">Review</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

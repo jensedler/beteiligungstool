@@ -1,0 +1,74 @@
+<div class="card">
+    <div class="card-header">
+        <h5>{{ section.title }}</h5>
+        {% if section.description %}
+        <p class="text-muted mb-0">{{ section.description }}</p>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <form hx-post="{{ url_for('konzept.save_section', konzept_id=konzept.id) }}"
+              hx-target="#save-feedback" hx-swap="innerHTML">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="section_id" value="{{ section.id }}">
+
+            {% for q in section.questions %}
+            {% if q.is_active %}
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    {{ q.text }}
+                    {% if q.is_required %}<span class="text-danger">*</span>{% endif %}
+                </label>
+                {% if q.help_text %}
+                <div class="form-text mb-2">{{ q.help_text }}</div>
+                {% endif %}
+
+                {% if q.question_type == 'text' %}
+                <input type="text" class="form-control" name="question_{{ q.id }}"
+                       value="{{ answers_map.get(q.id, '') }}">
+
+                {% elif q.question_type == 'textarea' %}
+                <textarea class="form-control" name="question_{{ q.id }}" rows="4">{{ answers_map.get(q.id, '') }}</textarea>
+
+                {% elif q.question_type == 'yesno' %}
+                {% set current_val = answers_map.get(q.id, '') %}
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="question_{{ q.id }}" value="ja"
+                           id="q{{ q.id }}_ja" {{ 'checked' if current_val == 'ja' }}>
+                    <label class="form-check-label" for="q{{ q.id }}_ja">Ja</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="question_{{ q.id }}" value="nein"
+                           id="q{{ q.id }}_nein" {{ 'checked' if current_val == 'nein' }}>
+                    <label class="form-check-label" for="q{{ q.id }}_nein">Nein</label>
+                </div>
+
+                {% elif q.question_type == 'multichoice' %}
+                {% set options = q.options_json | tojson | safe %}
+                <select class="form-select" name="question_{{ q.id }}">
+                    <option value="">-- Bitte waehlen --</option>
+                    {% for opt in q.options_json.split('\n') if opt.strip() %}
+                    <option value="{{ opt.strip() }}" {{ 'selected' if answers_map.get(q.id, '') == opt.strip() }}>{{ opt.strip() }}</option>
+                    {% endfor %}
+                </select>
+
+                {% elif q.question_type == 'checklist' %}
+                {% set checked_vals = answers_map.get(q.id, '[]') %}
+                {% for opt in q.options_json.split('\n') if opt.strip() %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="question_{{ q.id }}"
+                           value="{{ opt.strip() }}" id="q{{ q.id }}_{{ loop.index }}"
+                           {{ 'checked' if opt.strip() in checked_vals }}>
+                    <label class="form-check-label" for="q{{ q.id }}_{{ loop.index }}">{{ opt.strip() }}</label>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Abschnitt speichern
+            </button>
+        </form>
+    </div>
+</div>

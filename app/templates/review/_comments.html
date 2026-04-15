@@ -1,0 +1,15 @@
+{% if comments %}
+{% for c in comments %}
+<div class="card mb-2">
+    <div class="card-body py-2">
+        <div class="d-flex justify-content-between">
+            <strong>{{ c.author.name }}</strong>
+            <small class="text-muted">{{ c.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+        </div>
+        <p class="mb-0 mt-1">{{ c.text }}</p>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<p class="text-muted">Noch keine Kommentare.</p>
+{% endif %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Benutzer bearbeiten' if user else 'Neuer Benutzer' }}{% endblock %}
+{% block content %}
+<h2 class="mb-4">{{ 'Benutzer bearbeiten' if user else 'Neuer Benutzer' }}</h2>
+<div class="row">
+    <div class="col-md-8">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" name="name" value="{{ user.name if user else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">E-Mail</label>
+                <input type="email" class="form-control" name="email" value="{{ user.email if user else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Rolle</label>
+                <select class="form-select" name="role">
+                    <option value="fachamt" {{ 'selected' if user and user.role == 'fachamt' }}>Fachamt</option>
+                    <option value="db_team" {{ 'selected' if user and user.role == 'db_team' }}>Dialog & Beteiligung</option>
+                    <option value="admin" {{ 'selected' if user and user.role == 'admin' }}>Admin</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Abteilung</label>
+                <input type="text" class="form-control" name="department" value="{{ user.department if user else '' }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Passwort{% if user %} (leer lassen um nicht zu aendern){% endif %}</label>
+                <input type="password" class="form-control" name="password" {{ 'required' if not user }}>
+            </div>
+            {% if user %}
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" name="is_active" id="is_active" {{ 'checked' if user.is_active }}>
+                <label class="form-check-label" for="is_active">Aktiv</label>
+            </div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">Speichern</button>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">Abbrechen</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

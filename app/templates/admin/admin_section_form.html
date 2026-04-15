@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Sektion bearbeiten' if section else 'Neue Sektion' }}{% endblock %}
+{% block content %}
+<h2 class="mb-4">{{ 'Sektion bearbeiten' if section else 'Neue Sektion' }}</h2>
+<div class="row">
+    <div class="col-md-8">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label">Titel</label>
+                <input type="text" class="form-control" name="title" value="{{ section.title if section else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Beschreibung</label>
+                <textarea class="form-control" name="description" rows="3">{{ section.description if section else '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Reihenfolge</label>
+                <input type="number" class="form-control" name="order" value="{{ section.order if section else 0 }}">
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" name="is_optional" id="is_optional" {{ 'checked' if section and section.is_optional }}>
+                <label class="form-check-label" for="is_optional">Optional</label>
+            </div>
+            {% if section %}
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" name="is_active" id="is_active" {{ 'checked' if section.is_active }}>
+                <label class="form-check-label" for="is_active">Aktiv</label>
+            </div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">Speichern</button>
+            <a href="{{ url_for('admin.sections') }}" class="btn btn-outline-secondary">Abbrechen</a>
+        </form>
+    </div>
+</div>
+
+{% if section and section.questions %}
+<hr>
+<h4>Fragen in dieser Sektion</h4>
+<ul class="list-group">
+    {% for q in section.questions %}
+    <li class="list-group-item d-flex justify-content-between">
+        <span>{{ q.order }}. {{ q.text[:80] }} <small class="text-muted">[{{ q.question_type }}]</small></span>
+        <a href="{{ url_for('admin.question_edit', question_id=q.id) }}" class="btn btn-sm btn-outline-secondary">Bearbeiten</a>
+    </li>
+    {% endfor %}
+</ul>
+<a href="{{ url_for('admin.question_create', section_id=section.id) }}" class="btn btn-outline-primary mt-2">+ Frage hinzufuegen</a>
+{% endif %}
+{% endblock %}

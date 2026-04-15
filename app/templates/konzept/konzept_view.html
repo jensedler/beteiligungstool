@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}{{ konzept.title }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>{{ konzept.title }}</h2>
+    <div>
+        <span class="badge bg-{% if konzept.status == 'final' %}success{% elif konzept.status == 'returned' %}danger{% elif konzept.status == 'in_review' %}warning{% elif konzept.status == 'submitted' %}primary{% else %}secondary{% endif %} fs-6">
+            {% if konzept.status == 'draft' %}Entwurf
+            {% elif konzept.status == 'submitted' %}Eingereicht
+            {% elif konzept.status == 'in_review' %}In Pruefung
+            {% elif konzept.status == 'returned' %}Zurueckgesendet
+            {% elif konzept.status == 'final' %}Finalisiert
+            {% endif %}
+        </span>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" id="viewTabs" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-konzept">Konzepttext</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-answers">Antworten</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comments">
+            Kommentare <span class="badge bg-secondary">{{ comments|length }}</span>
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="tab-konzept">
+        {% if konzept.edited_text or konzept.generated_text %}
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Generierter Konzepttext</span>
+                {% if konzept.status not in ('final',) and (konzept.author_id == current_user.id or current_user.is_db_team or current_user.is_admin) %}
+                <form method="POST" action="{{ url_for('konzept.generate', konzept_id=konzept.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-primary btn-sm" onclick="return confirm('Text neu generieren? Der aktuelle Text wird ueberschrieben.')">
+                        <i class="bi bi-arrow-clockwise"></i> Neu generieren
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {{ (konzept.edited_text or konzept.generated_text) | markdown }}
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Noch kein Konzepttext vorhanden.
+            {% if konzept.status != 'draft' %}
+            <form method="POST" action="{{ url_for('konzept.generate', konzept_id=konzept.id) }}" class="d-inline ms-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-robot"></i> Jetzt mit KI generieren
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="tab-pane fade" id="tab-answers">
+        {% for section in sections %}
+        <div class="card mb-3">
+            <div class="card-header"><strong>{{ section.title }}</strong></div>
+            <div class="card-body">
+                {% for q in section.questions %}
+                {% if q.is_active and answers_map.get(q.id) %}
+                <div class="mb-3">
+                    <strong>{{ q.text }}</strong>
+                    <p>{{ answers_map.get(q.id, '-') }}</p>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="tab-pane fade" id="tab-comments">
+        <div id="comments-list">
+            {% include "konzept/_comments.html" %}
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    {% if konzept.status in ('draft', 'returned') and konzept.author_id == current_user.id %}
+    <a href="{{ url_for('konzept.edit', konzept_id=konzept.id) }}" class="btn btn-primary">Bearbeiten</a>
+    {% endif %}
+    <a href="{{ url_for('export.docx', konzept_id=konzept.id) }}" class="btn btn-outline-secondary">
+        <i class="bi bi-file-earmark-word"></i> Word-Export
+    </a>
+    <a href="{{ url_for('export.md', konzept_id=konzept.id) }}" class="btn btn-outline-secondary">
+        <i class="bi bi-markdown"></i> Markdown-Export
+    </a>
+    {% if konzept.author_id == current_user.id or current_user.is_admin %}
+    {% if konzept.status == 'draft' %}
+    <form method="POST" action="{{ url_for('konzept.delete', konzept_id=konzept.id) }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Wirklich loeschen?')">Loeschen</button>
+    </form>
+    {% endif %}
+    {% endif %}
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">Zurueck</a>
+</div>
+{% endblock %}

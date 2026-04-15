@@ -1,0 +1,14 @@
+# Umgebungsvariablen (enthaelt Secrets!)
+.env
+
+# Datenbank
+instance/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Docker
+# (Dockerfile bleibt im Repo)

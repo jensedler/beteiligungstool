@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Frage bearbeiten' if question else 'Neue Frage' }}{% endblock %}
+{% block content %}
+<h2 class="mb-4">{{ 'Frage bearbeiten' if question else 'Neue Frage' }}</h2>
+<p class="text-muted">Sektion: {{ section.title }}</p>
+<div class="row">
+    <div class="col-md-8">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <label class="form-label">Fragetext</label>
+                <textarea class="form-control" name="text" rows="3" required>{{ question.text if question else '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Hilfetext</label>
+                <textarea class="form-control" name="help_text" rows="2">{{ question.help_text if question else '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Fragetyp</label>
+                <select class="form-select" name="question_type">
+                    {% for t in ['text', 'textarea', 'yesno', 'multichoice', 'checklist'] %}
+                    <option value="{{ t }}" {{ 'selected' if question and question.question_type == t }}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Optionen (eine pro Zeile, fuer multichoice/checklist)</label>
+                <textarea class="form-control" name="options_json" rows="4">{{ question.options_json if question else '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Reihenfolge</label>
+                <input type="number" class="form-control" name="order" value="{{ question.order if question else 0 }}">
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" name="is_required" id="is_required" {{ 'checked' if not question or question.is_required }}>
+                <label class="form-check-label" for="is_required">Pflichtfeld</label>
+            </div>
+            {% if question %}
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" name="is_active" id="is_active" {{ 'checked' if question.is_active }}>
+                <label class="form-check-label" for="is_active">Aktiv</label>
+            </div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">Speichern</button>
+            <a href="{{ url_for('admin.section_edit', section_id=section.id) }}" class="btn btn-outline-secondary">Abbrechen</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

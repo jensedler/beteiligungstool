@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Leitfragen-Verwaltung{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Leitfragen-Verwaltung</h2>
+    <a href="{{ url_for('admin.section_create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Neue Sektion
+    </a>
+</div>
+
+{% for section in sections %}
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <strong>{{ section.order }}. {{ section.title }}</strong>
+            {% if section.is_optional %}<span class="badge bg-info">Optional</span>{% endif %}
+            {% if not section.is_active %}<span class="badge bg-secondary">Inaktiv</span>{% endif %}
+        </div>
+        <div>
+            <a href="{{ url_for('admin.section_edit', section_id=section.id) }}" class="btn btn-sm btn-outline-secondary">Bearbeiten</a>
+            <a href="{{ url_for('admin.question_create', section_id=section.id) }}" class="btn btn-sm btn-outline-primary">+ Frage</a>
+        </div>
+    </div>
+    {% if section.questions %}
+    <ul class="list-group list-group-flush">
+        {% for q in section.questions %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <span>{{ q.order }}. {{ q.text[:80] }}{% if q.text|length > 80 %}...{% endif %}</span>
+                <small class="text-muted ms-2">[{{ q.question_type }}]</small>
+                {% if not q.is_active %}<span class="badge bg-secondary">Inaktiv</span>{% endif %}
+            </div>
+            <a href="{{ url_for('admin.question_edit', question_id=q.id) }}" class="btn btn-sm btn-outline-secondary">Bearbeiten</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endfor %}
+{% endblock %}
