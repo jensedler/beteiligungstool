@@ -7,10 +7,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p instance
+RUN mkdir -p /storage
 
 ENV FLASK_APP=wsgi.py
 
-EXPOSE 8000
+EXPOSE 80
 
-CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:8000", "wsgi:app"]
+CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:80", "wsgi:app"]

@@ -1,104 +1,131 @@
 # Deployment Beteiligungstool
 
-## Voraussetzungen Server
+## Deployment via Once (empfohlen)
+
+Die App ist für das Deployment über [Once](https://github.com/basecamp/once) vorbereitet und erfüllt alle Voraussetzungen:
+
+- Docker-Container, der HTTP auf Port 80 bereitstellt
+- Healthcheck-Endpunkt unter `/up`
+- Persistente Daten unter `/storage`
+
+### Voraussetzungen
+
+- Once ist auf dem Zielserver installiert
+- Ein DNS-Eintrag für die gewünschte Domain zeigt auf den Server
+- Das Docker-Image ist auf GitHub Container Registry veröffentlicht (siehe unten)
+
+### Docker-Image veröffentlichen
+
+Das Repository enthält einen GitHub Actions Workflow (`.github/workflows/docker-publish.yml`), der das Image automatisch baut und auf der GitHub Container Registry (GHCR) veröffentlicht, sobald ein neues Tag gepusht wird.
+
+**Wichtig:** Erst den Pull Request in `master` mergen, dann taggen — das Image wird immer auf dem Stand von `master` gebaut.
+
+#### Option A: Terminal
+
+```bash
+git checkout master
+git pull
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+#### Option B: github.com
+
+1. Repo-Seite öffnen → **Releases** → **Create a new release**
+2. Unter **Choose a tag** ein neues Tag eingeben (z.B. `v1.0.0`)
+3. Als Ziel-Branch `master` auswählen
+4. **Publish release** klicken → der Workflow startet automatisch
+
+Das Image ist danach unter `ghcr.io/jensedler/beteiligungstool:<version>` verfügbar.
+
+### Erstmaliges Deployment
+
+1. Ein neues Tag pushen, um das Image zu bauen (siehe oben).
+
+2. In der Once-Oberfläche die App hinzufügen und den Image-Pfad sowie die Domain eintragen:
+
+```
+ghcr.io/jensedler/beteiligungstool:latest
+```
+
+3. Umgebungsvariablen in den Once-Einstellungen (`s` für Settings) konfigurieren:
+
+| Variable | Pflicht | Beschreibung |
+|---|---|---|
+| `OPENAI_API_KEY` | ja | OpenAI API-Key |
+| `OPENAI_MODEL` | nein | Zu verwendendes Modell (Default: `gpt-4o`) |
+
+`SECRET_KEY_BASE` wird von Once automatisch gesetzt und als Flask `SECRET_KEY` verwendet.
+
+4. Datenbank und initiale Daten anlegen. Dazu einmalig in den laufenden Container einsteigen:
+
+```bash
+docker exec -it <container-name> python seed_questions.py
+```
+
+### Updates einspielen
+
+Neues Image bauen, pushen und in der Once-Oberfläche neu deployen.
+
+### Datenpersistenz
+
+Die SQLite-Datenbank liegt unter `/storage/beteiligungstool.db` im Container. Once bindet dieses Verzeichnis als persistentes Volume ein und sichert es automatisch.
+
+---
+
+## Manuelles Deployment (ohne Once)
+
+### Voraussetzungen Server
 
 - Ubuntu/Debian Linux
-- Apache2 installiert
-- Python 3.10+
+- Docker installiert
 - Root-Zugang
 
-## Erstmaliges Deployment
-
-### 1. Konfiguration anpassen
-
-Bearbeite `upload.sh` und `deploy.sh`:
+### Container starten
 
 ```bash
-# In upload.sh:
-SERVER_USER="root"              # Dein SSH-User
-SERVER_HOST="dein-server.de"    # Server IP/Domain
-
-# In deploy.sh:
-SERVER_NAME="beteiligung.bielefeld.de"  # Deine Domain
+docker run -d \
+  --name beteiligungstool \
+  -p 80:80 \
+  -v /var/www/beteiligungstool/storage:/storage \
+  -e SECRET_KEY=<zufaelliger-schluessel> \
+  -e OPENAI_API_KEY=<dein-key> \
+  <registry>/<image-name>:latest
 ```
 
-### 2. Dateien hochladen (lokal ausfuehren)
+### Datenbank initialisieren
 
 ```bash
-cd beteiligungstool
-./deploy/upload.sh
+docker exec -it beteiligungstool python seed_questions.py
 ```
 
-### 3. Deployment ausfuehren (auf Server)
+### Updates einspielen
 
 ```bash
-ssh root@dein-server.de
-cd /var/www/beteiligungstool
-sudo ./deploy/deploy.sh
-```
-
-### 4. .env konfigurieren (auf Server)
-
-```bash
-nano /var/www/beteiligungstool/.env
-# OPENAI_API_KEY eintragen
-```
-
-### 5. HTTPS einrichten (optional, empfohlen)
-
-```bash
-apt install certbot python3-certbot-apache
-certbot --apache -d beteiligung.bielefeld.de
-```
-
-## Updates einspielen
-
-### 1. Dateien hochladen (lokal)
-
-```bash
-./deploy/upload.sh
-```
-
-### 2. Update ausfuehren (auf Server)
-
-```bash
-sudo /var/www/beteiligungstool/deploy/update.sh
-```
-
-## Nuetzliche Befehle
-
-```bash
-# Status pruefen
-systemctl status beteiligungstool
-
-# Logs anzeigen
-journalctl -u beteiligungstool -f
-
-# Service neustarten
-systemctl restart beteiligungstool
-
-# Apache neustarten
-systemctl restart apache2
+docker pull <registry>/<image-name>:latest
+docker stop beteiligungstool && docker rm beteiligungstool
+# docker run ... (wie oben)
 ```
 
 ## Troubleshooting
 
-### Service startet nicht
+### Container startet nicht
 
 ```bash
-journalctl -u beteiligungstool -n 50
+docker logs beteiligungstool
 ```
 
-### 502 Bad Gateway
+### Healthcheck schlägt fehl
 
-Gunicorn laeuft nicht:
 ```bash
-systemctl restart beteiligungstool
+curl http://localhost/up
+# Erwartete Antwort: OK
 ```
 
-### Berechtigungsfehler
+### Datenbankfehler
+
+Sicherstellen, dass das `/storage`-Verzeichnis im Container beschreibbar ist:
 
 ```bash
-chown -R www-data:www-data /var/www/beteiligungstool
-chmod 600 /var/www/beteiligungstool/.env
+docker exec -it beteiligungstool ls -la /storage
 ```

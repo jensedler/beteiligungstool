@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, Response
 from markupsafe import Markup
 import markdown
 
@@ -37,6 +37,10 @@ def create_app(config_class=Config):
     app.register_blueprint(review_bp, url_prefix="/review")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(export_bp, url_prefix="/export")
+
+    @app.route("/up")
+    def healthcheck():
+        return Response("OK", status=200, mimetype="text/plain")
 
     @app.errorhandler(404)
     def not_found(e):
