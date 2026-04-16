@@ -66,6 +66,7 @@ Formatiere das Dokument in Markdown.
 
 def generate_konzept_text(konzept: Konzept) -> str:
     api_key = current_app.config.get("OPENAI_API_KEY")
+    base_url = current_app.config.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     model = current_app.config.get("OPENAI_MODEL", "gpt-4o")
 
     if not api_key:
@@ -104,7 +105,7 @@ Bringe die Informationen in einen sinnvollen Zusammenhang, ergaenze wo noetig, u
 Das Konzept soll als Arbeitsgrundlage fuer das Team Dialog & Beteiligung der Stadt Bielefeld dienen.
 """
 
-    client = openai.OpenAI(api_key=api_key)
+    client = openai.OpenAI(api_key=api_key, base_url=base_url)
     response = client.chat.completions.create(
         model=model,
         messages=[
