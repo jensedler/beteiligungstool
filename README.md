@@ -43,6 +43,7 @@ Die App ist dann unter `http://localhost:5000` erreichbar.
 | `SECRET_KEY` | ja | Flask-Session-Schlüssel |
 | `OPENAI_API_KEY` | ja | OpenAI API-Key |
 | `DATABASE_URL` | nein | SQLAlchemy-Verbindung (Default: `sqlite:///instance/beteiligungstool.db`) |
+| `OPENAI_BASE_URL` | nein | API-Endpunkt (Default: `https://api.openai.com/v1`) |
 | `OPENAI_MODEL` | nein | Zu verwendendes Modell (Default: `gpt-4o`) |
 
 ## Deployment via Once

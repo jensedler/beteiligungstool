@@ -20,19 +20,21 @@ Das Repository enthält einen GitHub Actions Workflow (`.github/workflows/docker
 
 **Wichtig:** Erst den Pull Request in `master` mergen, dann taggen — das Image wird immer auf dem Stand von `master` gebaut.
 
+Das Tag muss zwingend mit `v` beginnen (z.B. `v1.0.0`), da der Workflow nur auf Tags der Form `v*` reagiert.
+
 #### Option A: Terminal
 
 ```bash
 git checkout master
 git pull
-git tag v1.0.0
-git push origin v1.0.0
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
 #### Option B: github.com
 
 1. Repo-Seite öffnen → **Releases** → **Create a new release**
-2. Unter **Choose a tag** ein neues Tag eingeben (z.B. `v1.0.0`)
+2. Unter **Choose a tag** ein neues Tag eingeben — Format: `v0.1.0` (mit `v`, ohne Punkt danach)
 3. Als Ziel-Branch `master` auswählen
 4. **Publish release** klicken → der Workflow startet automatisch
 
@@ -53,6 +55,7 @@ ghcr.io/jensedler/beteiligungstool:latest
 | Variable | Pflicht | Beschreibung |
 |---|---|---|
 | `OPENAI_API_KEY` | ja | OpenAI API-Key |
+| `OPENAI_BASE_URL` | nein | API-Endpunkt (Default: `https://api.openai.com/v1`) |
 | `OPENAI_MODEL` | nein | Zu verwendendes Modell (Default: `gpt-4o`) |
 
 `SECRET_KEY_BASE` wird von Once automatisch gesetzt und als Flask `SECRET_KEY` verwendet.
