@@ -66,6 +66,14 @@ ghcr.io/jensedler/beteiligungstool:latest
 docker exec -it <container-name> python seed_questions.py
 ```
 
+Der Seed-Prozess legt einen Admin-Account an:
+
+| E-Mail | Passwort |
+|---|---|
+| `admin@bielefeld.de` | `changeme123` |
+
+**Das Passwort nach dem ersten Login umgehend ändern.**
+
 ### Updates einspielen
 
 Neues Image bauen, pushen und in der Once-Oberfläche neu deployen.
