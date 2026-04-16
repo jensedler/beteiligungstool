@@ -60,11 +60,13 @@ ghcr.io/jensedler/beteiligungstool:latest
 
 `SECRET_KEY_BASE` wird von Once automatisch gesetzt und als Flask `SECRET_KEY` verwendet.
 
-4. Datenbank und initiale Daten anlegen. Dazu einmalig in den laufenden Container einsteigen:
+4. Die Datenbank wird beim ersten Start automatisch initialisiert. Dabei wird ein Admin-Account angelegt:
 
-```bash
-docker exec -it <container-name> python seed_questions.py
-```
+| E-Mail | Passwort |
+|---|---|
+| `admin@bielefeld.de` | `changeme123` |
+
+**Das Passwort nach dem ersten Login umgehend ändern.**
 
 Der Seed-Prozess legt einen Admin-Account an:
 
@@ -102,12 +104,6 @@ docker run -d \
   -e SECRET_KEY=<zufaelliger-schluessel> \
   -e OPENAI_API_KEY=<dein-key> \
   <registry>/<image-name>:latest
-```
-
-### Datenbank initialisieren
-
-```bash
-docker exec -it beteiligungstool python seed_questions.py
 ```
 
 ### Updates einspielen

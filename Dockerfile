@@ -11,6 +11,9 @@ RUN mkdir -p /storage
 
 ENV FLASK_APP=wsgi.py
 
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
 EXPOSE 80
 
-CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:80", "wsgi:app"]
+CMD ["./entrypoint.sh"]
