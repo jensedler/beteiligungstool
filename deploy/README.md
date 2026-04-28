@@ -80,6 +80,66 @@ Der Seed-Prozess legt einen Admin-Account an:
 
 Neues Image bauen, pushen und in der Once-Oberfläche neu deployen.
 
+---
+
+## Staging-Umgebung
+
+### Konzept
+
+Zwei Tags steuern, welche Once-Instanz ein Update erhält:
+
+| Docker-Tag | Wann gesetzt | Once-Instanz |
+|---|---|---|
+| `latest` | Nur bei stabilen Releases (`v1.2.0`) | Produktion |
+| `staging` | Nur bei Pre-Release-Tags (`v1.2.0-rc.1`) | Staging |
+
+Da die Produktiv-Instanz in Once auf `:latest` pinnt und die Staging-Instanz auf `:staging`, zieht Once nie automatisch ein Update für die falsche Umgebung.
+
+### Branch-Strategie
+
+```
+master   ──●──────────────────────────────●──── (Produktion, v1.2.0)
+            ↑                              ↑ Merge + stabiles Tag
+staging  ───●──●──●──●──●──●──●──●──●──● ─────  (v1.2.0-rc.1, -rc.2, …)
+```
+
+Entwicklung findet auf dem `staging`-Branch statt. Ist ein Stand bereit zum Testen, wird ein Pre-Release-Tag gesetzt.
+
+### Staging-Release erstellen
+
+```bash
+git checkout staging
+git pull
+git tag v1.2.0-rc.1
+git push origin v1.2.0-rc.1
+```
+
+Der Workflow baut das Image und veröffentlicht es als `ghcr.io/jensedler/beteiligungstool:staging` sowie `ghcr.io/jensedler/beteiligungstool:1.2.0-rc.1`. Das GitHub-Release wird automatisch als „Pre-release" markiert.
+
+Danach in der Once-Oberfläche die Staging-App manuell neu deployen — die Produktiv-App bleibt unberührt.
+
+### Staging-Instanz in Once einrichten
+
+1. In Once eine neue App anlegen
+2. Image-Pfad:
+   ```
+   ghcr.io/jensedler/beteiligungstool:staging
+   ```
+3. Domain: `staging.beteiligungstool.<domain>`
+4. Dieselben Umgebungsvariablen wie Produktion konfigurieren (ggf. andere Werte)
+
+### Staging → Produktion
+
+```bash
+git checkout master
+git merge staging
+git push
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+Das stabile Tag setzt `latest` — die Produktiv-Instanz kann nun in Once aktualisiert werden.
+
 ### Datenpersistenz
 
 Die SQLite-Datenbank liegt unter `/storage/beteiligungstool.db` im Container. Once bindet dieses Verzeichnis als persistentes Volume ein und sichert es automatisch.
