@@ -1,12 +1,12 @@
 # Beteiligungstool
 
-Webanwendung der Stadt Bielefeld zur Erfassung und Aufbereitung von Beteiligungskonzepten. Fachaemter füllen einen strukturierten Fragebogen aus; ein KI-Dienst (OpenAI GPT-4o) generiert daraus einen Entwurf für ein Beteiligungskonzept, den das Team Dialog & Beteiligung prüft und kommentiert.
+Webanwendung der Stadt Bielefeld zur Erfassung und Aufbereitung von Beteiligungskonzepten. Fachaemter füllen einen strukturierten Fragebogen aus; ein KI-Dienst generiert daraus einen Entwurf für ein Beteiligungskonzept, den das Team Dialog & Beteiligung prüft und kommentiert.
 
 ## Technologie
 
 - **Backend:** Python 3.11, Flask 3.1
 - **Datenbank:** SQLite (persistent in `/storage`)
-- **KI:** OpenAI GPT-4o
+- **KI:** OpenAI-kompatible API (konfigurierbar, z. B. OpenRouter)
 - **Server:** Gunicorn, Port 80
 - **Container:** Docker
 
@@ -15,20 +15,22 @@ Webanwendung der Stadt Bielefeld zur Erfassung und Aufbereitung von Beteiligungs
 ### Voraussetzungen
 
 - Python 3.11+
-- pip
 
 ### Setup
 
 ```bash
-# Abhängigkeiten installieren
+# Virtualenv erstellen und Abhängigkeiten installieren
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 
 # Umgebungsvariablen konfigurieren
 cp .env.example .env
 # .env anpassen: SECRET_KEY, OPENAI_API_KEY, ggf. DATABASE_URL
 
-# Datenbank initialisieren und Beispieldaten anlegen
+# Datenbank initialisieren und Migrationsstatus aktualisieren
 python seed_questions.py
+flask db upgrade
 
 # Entwicklungsserver starten
 flask run
@@ -41,10 +43,27 @@ Die App ist dann unter `http://localhost:5000` erreichbar.
 | Variable | Pflicht | Beschreibung |
 |---|---|---|
 | `SECRET_KEY` | ja | Flask-Session-Schlüssel |
-| `OPENAI_API_KEY` | ja | OpenAI API-Key |
+| `OPENAI_API_KEY` | ja | API-Key (OpenAI oder kompatibler Anbieter) |
 | `DATABASE_URL` | nein | SQLAlchemy-Verbindung (Default: `sqlite:///instance/beteiligungstool.db`) |
 | `OPENAI_BASE_URL` | nein | API-Endpunkt (Default: `https://api.openai.com/v1`) |
 | `OPENAI_MODEL` | nein | Zu verwendendes Modell (Default: `gpt-4o`) |
+
+### Datenbankmigrationen
+
+Das Projekt nutzt Flask-Migrate (Alembic) für Schemaänderungen.
+
+```bash
+# Neue Migration erstellen (nach Modelländerung)
+flask db migrate -m "beschreibung der aenderung"
+
+# Migration anwenden
+flask db upgrade
+
+# Migration rückgängig machen
+flask db downgrade
+```
+
+Migrationen liegen in `migrations/versions/`. Jede Datei enthält `upgrade()` und `downgrade()`. Beim Deployment wird `flask db upgrade` automatisch in `entrypoint.sh` ausgeführt.
 
 ## Deployment via Once
 

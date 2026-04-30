@@ -1,6 +1,8 @@
+import threading
 import openai
 from flask import current_app
 
+from app.extensions import db
 from app.models.konzept import Konzept
 from app.models.question import Section
 
@@ -116,3 +118,25 @@ Das Konzept soll als Arbeitsgrundlage fuer das Team Dialog & Beteiligung der Sta
         max_tokens=4000,
     )
     return response.choices[0].message.content
+
+
+def _generate_in_background(app, konzept_id: int) -> None:
+    with app.app_context():
+        konzept = db.session.get(Konzept, konzept_id)
+        if not konzept:
+            return
+        try:
+            text = generate_konzept_text(konzept)
+            if text:
+                konzept.generated_text = text
+                konzept.edited_text = text
+        except Exception:
+            pass
+        finally:
+            konzept.is_generating = False
+            db.session.commit()
+
+
+def start_generation(app, konzept_id: int) -> None:
+    t = threading.Thread(target=_generate_in_background, args=(app, konzept_id), daemon=True)
+    t.start()

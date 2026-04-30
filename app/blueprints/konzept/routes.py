@@ -1,13 +1,13 @@
 import json
 from datetime import datetime, timezone
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
 
 from app.extensions import db
 from app.models.konzept import Konzept, Answer
 from app.models.question import Section, Question
-from app.services.ai_service import generate_konzept_text
+from app.services.ai_service import start_generation
 from app.services.notification_service import notify_db_team, notify_author
 
 konzept_bp = Blueprint("konzept", __name__, template_folder="../../templates/konzept")
@@ -118,19 +118,13 @@ def submit(konzept_id):
 
     konzept.status = "submitted"
     konzept.submitted_at = datetime.now(timezone.utc)
+    konzept.is_generating = True
     db.session.commit()
 
-    # KI-generierung im Hintergrund
-    try:
-        text = generate_konzept_text(konzept)
-        konzept.generated_text = text
-        konzept.edited_text = text
-        db.session.commit()
-    except Exception:
-        pass  # Fallback: leerer Text
+    start_generation(current_app._get_current_object(), konzept.id)
 
     notify_db_team(konzept, f'Neues Konzept eingereicht: "{konzept.title}"')
-    flash("Konzept eingereicht.", "success")
+    flash("Konzept eingereicht. KI generiert den Konzepttext im Hintergrund.", "success")
     return redirect(url_for("konzept.view", konzept_id=konzept.id))
 
 
@@ -147,18 +141,12 @@ def generate(konzept_id):
         flash("Bitte zuerst einreichen.", "warning")
         return redirect(url_for("konzept.view", konzept_id=konzept.id))
 
-    try:
-        text = generate_konzept_text(konzept)
-        if text:
-            konzept.generated_text = text
-            konzept.edited_text = text
-            db.session.commit()
-            flash("Konzepttext wurde generiert.", "success")
-        else:
-            flash("Keine Antwort von der KI erhalten.", "warning")
-    except Exception as e:
-        flash(f"Fehler bei der Generierung: {str(e)}", "danger")
+    konzept.is_generating = True
+    db.session.commit()
 
+    start_generation(current_app._get_current_object(), konzept.id)
+
+    flash("KI-Generierung gestartet. Die Seite aktualisiert sich automatisch.", "info")
     return redirect(url_for("konzept.view", konzept_id=konzept.id))
 
 
