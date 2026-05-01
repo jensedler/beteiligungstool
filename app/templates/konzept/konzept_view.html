@@ -31,7 +31,15 @@
 
 <div class="tab-content">
     <div class="tab-pane fade show active" id="tab-konzept">
-        {% if konzept.edited_text or konzept.generated_text %}
+        {% if konzept.is_generating %}
+        <div class="alert alert-info d-flex align-items-center gap-3">
+            <div class="spinner-border spinner-border-sm flex-shrink-0" role="status">
+                <span class="visually-hidden">Generiert...</span>
+            </div>
+            <span>KI generiert den Konzepttext &ndash; bitte warten. Diese Seite aktualisiert sich automatisch.</span>
+        </div>
+        <script>setTimeout(() => location.reload(), 6000);</script>
+        {% elif konzept.edited_text or konzept.generated_text %}
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Generierter Konzepttext</span>

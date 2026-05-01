@@ -13,6 +13,7 @@ class Konzept(db.Model):
     # draft, submitted, in_review, returned, final
     generated_text = db.Column(db.Text, default="")
     edited_text = db.Column(db.Text, default="")
+    is_generating = db.Column(db.Boolean, nullable=False, default=False, server_default="0")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     submitted_at = db.Column(db.DateTime, nullable=True)
