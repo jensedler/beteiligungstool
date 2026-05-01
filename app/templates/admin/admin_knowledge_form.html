@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Dokument bearbeiten' if doc else 'Neues Dokument' }}{% endblock %}
+{% block content %}
+<h2 class="mb-1">{{ 'Dokument bearbeiten' if doc else 'Neues Dokument' }}</h2>
+<p class="text-muted mb-4">Dieses Dokument wird bei jeder KI-Generierung als Referenzmaterial in den System-Prompt eingebettet.</p>
+
+<div class="row">
+    <div class="col-md-9">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Titel <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="title" value="{{ doc.title if doc else '' }}" required placeholder="z. B. Bielefelder Leitlinien der Bürgerbeteiligung">
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Kategorie</label>
+                    <input type="text" class="form-control" name="category" value="{{ doc.category if doc else '' }}"
+                        placeholder="z. B. Leitlinien, Methodik, Rechtliches">
+                    <div class="form-text">Frei wählbar, dient nur der Übersicht.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Priorität</label>
+                    <input type="number" class="form-control" name="priority" value="{{ doc.priority if doc else 10 }}" min="1" max="99">
+                    <div class="form-text">Niedrigere Zahl = weiter oben im Prompt. Empfehlung: 1–5 für kritische Vorgaben, 10–20 für allgemeines Hintergrundwissen.</div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Kurzbeschreibung</label>
+                <input type="text" class="form-control" name="description" value="{{ doc.description if doc else '' }}"
+                    placeholder="Wofür wird dieses Dokument verwendet? (nur für Admin-Übersicht)">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Inhalt <span class="text-danger">*</span></label>
+                <textarea class="form-control font-monospace" name="content" rows="18" required
+                    placeholder="Füge hier den Referenztext ein. Markdown wird unterstützt.">{{ doc.content if doc else '' }}</textarea>
+                <div class="form-text">Markdown wird unterstützt. Dieser Text wird der KI als Referenzmaterial übergeben.</div>
+            </div>
+
+            {% if doc %}
+            <div class="mb-4 form-check">
+                <input type="checkbox" class="form-check-input" name="is_active" id="is_active" {{ 'checked' if doc.is_active }}>
+                <label class="form-check-label" for="is_active">Aktiv (wird in KI-Generierungen eingebettet)</label>
+            </div>
+            {% endif %}
+
+            <div class="d-flex gap-2 align-items-center">
+                <button type="submit" class="btn btn-primary">Speichern</button>
+                <a href="{{ url_for('admin.knowledge_list') }}" class="btn btn-outline-secondary">Abbrechen</a>
+                {% if doc %}
+                <div class="ms-auto">
+                    <form method="POST" action="{{ url_for('admin.knowledge_delete', doc_id=doc.id) }}"
+                        onsubmit="return confirm('Dokument wirklich löschen?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash"></i> Löschen
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -6,6 +6,7 @@ from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.user import User
 from app.models.question import Section, Question
+from app.models.knowledge import KnowledgeDocument
 
 admin_bp = Blueprint("admin", __name__, template_folder="../../templates/admin")
 
@@ -172,3 +173,65 @@ def question_edit(question_id):
         flash("Frage aktualisiert.", "success")
         return redirect(url_for("admin.section_edit", section_id=question.section_id))
     return render_template("admin_question_form.html", section=question.section, question=question)
+
+
+# ---- Knowledge documents management ----
+
+@admin_bp.route("/knowledge")
+@login_required
+@require_admin
+def knowledge_list():
+    docs = KnowledgeDocument.query.order_by(KnowledgeDocument.priority, KnowledgeDocument.id).all()
+    return render_template("admin_knowledge.html", docs=docs)
+
+
+@admin_bp.route("/knowledge/new", methods=["GET", "POST"])
+@login_required
+@require_admin
+def knowledge_create():
+    if request.method == "POST":
+        doc = KnowledgeDocument(
+            title=request.form.get("title", "").strip(),
+            description=request.form.get("description", "").strip(),
+            content=request.form.get("content", "").strip(),
+            category=request.form.get("category", "").strip(),
+            priority=request.form.get("priority", 10, type=int),
+        )
+        db.session.add(doc)
+        db.session.commit()
+        flash("Dokument erstellt.", "success")
+        return redirect(url_for("admin.knowledge_list"))
+    return render_template("admin_knowledge_form.html", doc=None)
+
+
+@admin_bp.route("/knowledge/<int:doc_id>/edit", methods=["GET", "POST"])
+@login_required
+@require_admin
+def knowledge_edit(doc_id):
+    doc = db.session.get(KnowledgeDocument, doc_id)
+    if not doc:
+        abort(404)
+    if request.method == "POST":
+        doc.title = request.form.get("title", "").strip()
+        doc.description = request.form.get("description", "").strip()
+        doc.content = request.form.get("content", "").strip()
+        doc.category = request.form.get("category", "").strip()
+        doc.priority = request.form.get("priority", doc.priority, type=int)
+        doc.is_active = "is_active" in request.form
+        db.session.commit()
+        flash("Dokument aktualisiert.", "success")
+        return redirect(url_for("admin.knowledge_list"))
+    return render_template("admin_knowledge_form.html", doc=doc)
+
+
+@admin_bp.route("/knowledge/<int:doc_id>/delete", methods=["POST"])
+@login_required
+@require_admin
+def knowledge_delete(doc_id):
+    doc = db.session.get(KnowledgeDocument, doc_id)
+    if not doc:
+        abort(404)
+    db.session.delete(doc)
+    db.session.commit()
+    flash("Dokument gelöscht.", "success")
+    return redirect(url_for("admin.knowledge_list"))

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Wissensdatenbank{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>Wissensdatenbank</h2>
+        <p class="text-muted mb-0">Referenzmaterial, das bei jeder KI-Generierung in den System-Prompt eingebettet wird.</p>
+    </div>
+    <a href="{{ url_for('admin.knowledge_create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Neues Dokument
+    </a>
+</div>
+
+{% if docs %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width:3rem">Prio</th>
+                <th>Titel</th>
+                <th>Kategorie</th>
+                <th>Beschreibung</th>
+                <th style="width:6rem">Status</th>
+                <th style="width:8rem"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in docs %}
+            <tr>
+                <td class="text-center text-muted">{{ doc.priority }}</td>
+                <td><strong>{{ doc.title }}</strong></td>
+                <td>
+                    {% if doc.category %}
+                    <span class="badge bg-secondary">{{ doc.category }}</span>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted small">{{ doc.description or '—' }}</td>
+                <td>
+                    {% if doc.is_active %}
+                    <span class="badge bg-success">Aktiv</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inaktiv</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <a href="{{ url_for('admin.knowledge_edit', doc_id=doc.id) }}" class="btn btn-sm btn-outline-secondary">Bearbeiten</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    Noch keine Dokumente vorhanden. Erstelle das erste Referenzdokument, um die KI-Generierung mit Leitlinien, Methoden oder rechtlichen Rahmenbedingungen anzureichern.
+</div>
+{% endif %}
+{% endblock %}

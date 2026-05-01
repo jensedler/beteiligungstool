@@ -45,6 +45,8 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ url_for('admin.users') }}">Benutzer</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('admin.sections') }}">Leitfragen</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin.knowledge_list') }}"><i class="bi bi-book me-1"></i>Wissensdatenbank</a></li>
                     </ul>
                 </li>
                 {% endif %}

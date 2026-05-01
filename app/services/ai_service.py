@@ -5,6 +5,7 @@ from flask import current_app
 from app.extensions import db
 from app.models.konzept import Konzept
 from app.models.question import Section
+from app.models.knowledge import KnowledgeDocument
 
 
 SYSTEM_PROMPT = """Du bist ein erfahrener Experte fuer Buergerbeteiligung und Dialogprozesse der Stadt Bielefeld.
@@ -66,6 +67,32 @@ Formatiere das Dokument in Markdown.
 """
 
 
+def _build_system_prompt() -> str:
+    try:
+        docs = (
+            KnowledgeDocument.query
+            .filter_by(is_active=True)
+            .order_by(KnowledgeDocument.priority, KnowledgeDocument.id)
+            .all()
+        )
+    except Exception:
+        return SYSTEM_PROMPT
+    if not docs:
+        return SYSTEM_PROMPT
+
+    parts = [SYSTEM_PROMPT, "\n\n---\n\n## Referenzmaterial und Wissensdatenbank\n"]
+    parts.append(
+        "Die folgenden Dokumente enthalten verbindliche Leitlinien, Methoden und Rahmenbedingungen "
+        "der Stadt Bielefeld. Berücksichtige diese Inhalte bei der Erstellung des Konzepts.\n"
+    )
+    for doc in docs:
+        header = f"### {doc.title}"
+        if doc.category:
+            header += f" [{doc.category}]"
+        parts.append(f"\n{header}\n{doc.content}\n")
+    return "\n".join(parts)
+
+
 def generate_konzept_text(konzept: Konzept) -> str:
     api_key = current_app.config.get("OPENAI_API_KEY")
     base_url = current_app.config.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
@@ -111,7 +138,7 @@ Das Konzept soll als Arbeitsgrundlage fuer das Team Dialog & Beteiligung der Sta
     response = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": _build_system_prompt()},
             {"role": "user", "content": user_prompt},
         ],
         temperature=0.5,
