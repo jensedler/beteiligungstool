@@ -3,6 +3,7 @@ from app.models.question import Section, Question
 from app.models.konzept import Konzept, Answer
 from app.models.comment import Comment
 from app.models.notification import Notification
+from app.models.knowledge import KnowledgeDocument
 from app.models.prompt import SystemPrompt
 
-__all__ = ["User", "Section", "Question", "Konzept", "Answer", "Comment", "Notification", "SystemPrompt"]
+__all__ = ["User", "Section", "Question", "Konzept", "Answer", "Comment", "Notification", "KnowledgeDocument", "SystemPrompt"]

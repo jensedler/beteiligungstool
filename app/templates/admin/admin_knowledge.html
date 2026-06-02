@@ -1,64 +1,60 @@
 {% extends "base.html" %}
-{% block title %}Wissensbasis{% endblock %}
+{% block title %}Wissensdatenbank{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Wissensbasis</h2>
-    <small class="text-muted">{{ files|length }} Datei(en) &mdash; erlaubte Formate: {{ allowed|join(', ') }}</small>
+    <div>
+        <h2>Wissensdatenbank</h2>
+        <p class="text-muted mb-0">Referenzmaterial, das bei jeder KI-Generierung in den System-Prompt eingebettet wird.</p>
+    </div>
+    <a href="{{ url_for('admin.knowledge_create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Neues Dokument
+    </a>
 </div>
 
-<div class="row g-4">
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-header fw-semibold"><i class="bi bi-upload me-1"></i> Datei hochladen</div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('admin.knowledge_upload') }}" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="mb-3">
-                        <label class="form-label">Datei</label>
-                        <input type="file" class="form-control" name="file" required
-                               accept="{{ allowed|join(',') }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Unterordner <small class="text-muted">(optional)</small></label>
-                        <input type="text" class="form-control" name="subfolder"
-                               placeholder="z.B. leitfaeden oder prozesse/2024">
-                        <div class="form-text">Leer lassen für das Stammverzeichnis.</div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-upload"></i> Hochladen
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-7">
-        <div class="card">
-            <div class="card-header fw-semibold"><i class="bi bi-folder2-open me-1"></i> Vorhandene Dateien</div>
-            {% if files %}
-            <ul class="list-group list-group-flush">
-                {% for rel in files %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span class="font-monospace small">
-                        <i class="bi bi-file-earmark-text me-1 text-muted"></i>{{ rel }}
-                    </span>
-                    <form method="POST" action="{{ url_for('admin.knowledge_delete') }}" class="d-inline"
-                          onsubmit="return confirm('„{{ rel }}" wirklich löschen?')">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="rel_path" value="{{ rel }}">
-                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </form>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <div class="card-body text-muted">
-                Noch keine Dateien vorhanden. Dateien hochladen, um die KI-Wissensbasis zu befüllen.
-            </div>
-            {% endif %}
-        </div>
-    </div>
+{% if docs %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width:3rem">Prio</th>
+                <th>Titel</th>
+                <th>Kategorie</th>
+                <th>Beschreibung</th>
+                <th style="width:6rem">Status</th>
+                <th style="width:8rem"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in docs %}
+            <tr>
+                <td class="text-center text-muted">{{ doc.priority }}</td>
+                <td><strong>{{ doc.title }}</strong></td>
+                <td>
+                    {% if doc.category %}
+                    <span class="badge bg-secondary">{{ doc.category }}</span>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted small">{{ doc.description or '—' }}</td>
+                <td>
+                    {% if doc.is_active %}
+                    <span class="badge bg-success">Aktiv</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inaktiv</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <a href="{{ url_for('admin.knowledge_edit', doc_id=doc.id) }}" class="btn btn-sm btn-outline-secondary">Bearbeiten</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+{% else %}
+<div class="alert alert-info">
+    Noch keine Dokumente vorhanden. Erstelle das erste Referenzdokument, um die KI-Generierung mit Leitlinien, Methoden oder rechtlichen Rahmenbedingungen anzureichern.
+</div>
+{% endif %}
 {% endblock %}

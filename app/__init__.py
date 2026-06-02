@@ -22,7 +22,7 @@ def create_app(config_class=Config):
             return ""
         return Markup(markdown.markdown(text, extensions=['tables', 'fenced_code']))
 
-    from app.models import User, Section, Question, Konzept, Answer, Comment, Notification  # noqa: F401
+    from app.models import User, Section, Question, Konzept, Answer, Comment, Notification, KnowledgeDocument  # noqa: F401
 
     from app.blueprints.auth.routes import auth_bp
     from app.blueprints.main.routes import main_bp

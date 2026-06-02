@@ -9,6 +9,32 @@ from app.models.prompt import SystemPrompt
 from app.services.knowledge_service import load_knowledge_base
 
 
+def _build_system_prompt() -> str:
+    try:
+        docs = (
+            KnowledgeDocument.query
+            .filter_by(is_active=True)
+            .order_by(KnowledgeDocument.priority, KnowledgeDocument.id)
+            .all()
+        )
+    except Exception:
+        return SYSTEM_PROMPT
+    if not docs:
+        return SYSTEM_PROMPT
+
+    parts = [SYSTEM_PROMPT, "\n\n---\n\n## Referenzmaterial und Wissensdatenbank\n"]
+    parts.append(
+        "Die folgenden Dokumente enthalten verbindliche Leitlinien, Methoden und Rahmenbedingungen "
+        "der Stadt Bielefeld. Berücksichtige diese Inhalte bei der Erstellung des Konzepts.\n"
+    )
+    for doc in docs:
+        header = f"### {doc.title}"
+        if doc.category:
+            header += f" [{doc.category}]"
+        parts.append(f"\n{header}\n{doc.content}\n")
+    return "\n".join(parts)
+
+
 def generate_konzept_text(konzept: Konzept) -> str:
     api_key = current_app.config.get("OPENAI_API_KEY")
     base_url = current_app.config.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
