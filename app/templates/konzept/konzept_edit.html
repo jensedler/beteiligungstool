@@ -12,10 +12,11 @@
             <div class="list-group" id="section-nav">
                 {% for section in sections %}
                 <a href="#" class="list-group-item list-group-item-action {% if loop.first %}active{% endif %}"
+                   data-section-id="{{ section.id }}"
                    hx-get="{{ url_for('konzept.section_form', konzept_id=konzept.id, section_id=section.id) }}"
                    hx-target="#section-content"
                    hx-swap="innerHTML"
-                   onclick="document.querySelectorAll('#section-nav a').forEach(a=>a.classList.remove('active'));this.classList.add('active');">
+                   onclick="document.querySelectorAll('#section-nav a').forEach(a=>a.classList.remove('active'));this.classList.add('active');document.getElementById('save-feedback').innerHTML='';">
                     {{ loop.index }}. {{ section.title }}
                     {% if section.is_optional %}<small class="text-muted">(optional)</small>{% endif %}
                 </a>
@@ -43,4 +44,28 @@
         </div>
     </div>
 </div>
+<script>
+function navigateToSection(sectionId) {
+    var link = document.querySelector('[data-section-id="' + sectionId + '"]');
+    if (link) link.click();
+}
+
+document.body.addEventListener('htmx:afterSettle', function(evt) {
+    var fb = document.getElementById('save-feedback');
+    if (!fb || !fb.innerHTML.trim()) return;
+
+    var bottom = document.getElementById('save-feedback-bottom');
+    if (bottom) bottom.innerHTML = fb.innerHTML;
+
+    setTimeout(function() {
+        [fb, bottom].filter(Boolean).forEach(function(el) {
+            var alert = el.querySelector('.alert');
+            if (alert) {
+                alert.classList.remove('show');
+                setTimeout(function() { el.innerHTML = ''; }, 300);
+            }
+        });
+    }, 4000);
+});
+</script>
 {% endblock %}

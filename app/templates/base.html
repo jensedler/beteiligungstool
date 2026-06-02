@@ -14,6 +14,11 @@
         .status-returned { color: #dc3545; }
         .status-final { color: #198754; }
         .section-nav .nav-link.active { font-weight: bold; }
+        .diff-text { white-space: pre-wrap; font-size: 0.875rem; font-family: inherit; }
+        mark.diff-del { background-color: #ffd7d7; color: inherit; padding: 0; border-radius: 2px; }
+        mark.diff-ins { background-color: #d4edda; color: inherit; padding: 0; border-radius: 2px; }
+        .diff-del-legend { background-color: #ffd7d7; padding: 1px 6px; border-radius: 2px; }
+        .diff-ins-legend { background-color: #d4edda; padding: 1px 6px; border-radius: 2px; }
     </style>
 </head>
 <body>
@@ -45,6 +50,8 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ url_for('admin.users') }}">Benutzer</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('admin.sections') }}">Leitfragen</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin.edit_prompt') }}">KI-Prompt</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin.knowledge') }}">Wissensbasis</a></li>
                     </ul>
                 </li>
                 {% endif %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Wissensbasis{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Wissensbasis</h2>
+    <small class="text-muted">{{ files|length }} Datei(en) &mdash; erlaubte Formate: {{ allowed|join(', ') }}</small>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header fw-semibold"><i class="bi bi-upload me-1"></i> Datei hochladen</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.knowledge_upload') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Datei</label>
+                        <input type="file" class="form-control" name="file" required
+                               accept="{{ allowed|join(',') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Unterordner <small class="text-muted">(optional)</small></label>
+                        <input type="text" class="form-control" name="subfolder"
+                               placeholder="z.B. leitfaeden oder prozesse/2024">
+                        <div class="form-text">Leer lassen für das Stammverzeichnis.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Hochladen
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header fw-semibold"><i class="bi bi-folder2-open me-1"></i> Vorhandene Dateien</div>
+            {% if files %}
+            <ul class="list-group list-group-flush">
+                {% for rel in files %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="font-monospace small">
+                        <i class="bi bi-file-earmark-text me-1 text-muted"></i>{{ rel }}
+                    </span>
+                    <form method="POST" action="{{ url_for('admin.knowledge_delete') }}" class="d-inline"
+                          onsubmit="return confirm('„{{ rel }}" wirklich löschen?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="rel_path" value="{{ rel }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-muted">
+                Noch keine Dateien vorhanden. Dateien hochladen, um die KI-Wissensbasis zu befüllen.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

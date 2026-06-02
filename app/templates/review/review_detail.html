@@ -14,10 +14,10 @@
 
 <ul class="nav nav-tabs mb-3" role="tablist">
     <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-text">Konzepttext</button>
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-text">Beteiligungskonzept</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-answers">Antworten</button>
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-answers">Informationen</button>
     </li>
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comments">
@@ -28,7 +28,13 @@
 
 <div class="tab-content">
     <div class="tab-pane fade show active" id="tab-text">
-        {% if konzept.status in ('submitted', 'in_review') %}
+        {% if konzept.is_generating %}
+        <div class="alert alert-info d-flex align-items-center gap-3">
+            <div class="spinner-border spinner-border-sm flex-shrink-0" role="status"></div>
+            <span>KI generiert das Beteiligungskonzept – bitte warten. Diese Seite aktualisiert sich automatisch.</span>
+        </div>
+        <script>setTimeout(() => location.reload(), 6000);</script>
+        {% elif konzept.status in ('submitted', 'in_review') %}
         <form hx-post="{{ url_for('review.save_text', konzept_id=konzept.id) }}"
               hx-target="#text-save-feedback" hx-swap="innerHTML">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

@@ -14,3 +14,7 @@ class Config:
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
     OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
     OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o")
+    KNOWLEDGE_BASE_DIR = os.environ.get(
+        "KNOWLEDGE_BASE_DIR",
+        os.path.join(basedir, "..", "instance", "knowledge_base")
+    )

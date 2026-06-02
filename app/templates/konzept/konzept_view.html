@@ -17,11 +17,18 @@
 
 <ul class="nav nav-tabs mb-3" id="viewTabs" role="tablist">
     <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-konzept">Konzepttext</button>
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-konzept">Beteiligungskonzept</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-answers">Antworten</button>
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-answers">Informationen</button>
     </li>
+    {% if diff_old_html %}
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-diff">
+            Änderungen <span class="badge bg-warning text-dark">!</span>
+        </button>
+    </li>
+    {% endif %}
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-comments">
             Kommentare <span class="badge bg-secondary">{{ comments|length }}</span>
@@ -42,8 +49,15 @@
         {% elif konzept.edited_text or konzept.generated_text %}
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Generierter Konzepttext</span>
-                {% if konzept.status not in ('final',) and (konzept.author_id == current_user.id or current_user.is_db_team or current_user.is_admin) %}
+                <span>
+                    {% if konzept.edited_text and konzept.edited_text != konzept.generated_text %}
+                    <i class="bi bi-pencil-fill text-primary me-1"></i>
+                    Überarbeitet von Dialog &amp; Beteiligung
+                    {% else %}
+                    KI-generierter Entwurf
+                    {% endif %}
+                </span>
+                {% if konzept.status not in ('final',) and (current_user.is_db_team or current_user.is_admin) %}
                 <form method="POST" action="{{ url_for('konzept.generate', konzept_id=konzept.id) }}" class="d-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-outline-primary btn-sm" onclick="return confirm('Text neu generieren? Der aktuelle Text wird ueberschrieben.')">
@@ -71,6 +85,31 @@
         {% endif %}
     </div>
 
+    {% if diff_old_html %}
+    <div class="tab-pane fade" id="tab-diff">
+        <p class="text-muted mb-3">
+            <i class="bi bi-info-circle"></i>
+            Links: KI-generierter Originaltext &mdash; Rechts: überarbeitete Fassung von Dialog &amp; Beteiligung.
+            <span class="diff-del-legend">Rot hinterlegt</span> = entfernt oder geändert,
+            <span class="diff-ins-legend">grün hinterlegt</span> = neu oder geändert.
+        </p>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header fw-semibold">KI-generierter Entwurf</div>
+                    <div class="card-body diff-text">{{ diff_old_html }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header fw-semibold">Überarbeitet von Dialog &amp; Beteiligung</div>
+                    <div class="card-body diff-text">{{ diff_new_html }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="tab-pane fade" id="tab-answers">
         {% for section in sections %}
         <div class="card mb-3">
@@ -93,6 +132,17 @@
         <div id="comments-list">
             {% include "konzept/_comments.html" %}
         </div>
+        {% if konzept.author_id == current_user.id and konzept.status not in ('draft', 'final') %}
+        <form hx-post="{{ url_for('konzept.add_comment', konzept_id=konzept.id) }}"
+              hx-target="#comments-list" hx-swap="innerHTML" class="mt-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-2">
+                <textarea class="form-control" name="text" rows="3"
+                    placeholder="Kommentar zu Ihren Änderungen hinzufügen..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Kommentar senden</button>
+        </form>
+        {% endif %}
     </div>
 </div>
 

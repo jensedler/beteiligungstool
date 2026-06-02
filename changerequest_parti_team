@@ -1,0 +1,87 @@
+Von Julia,Lichtenecker 22.04.2026
+
+
+
+    1. Ausfüllen des Formulars seitens der Fachämter
+    • Beim Speichern einer jeden Seite sollte ein Feld o. ä. mit „erfolgreich gespeichert“ o. ä. erscheinen, um Irritationen zu vermeiden
+    • Gleiches gilt für „Formular erfolgreich abgeschickt“
+    • Platzhalter auf der ersten Seite ändern zu „Öffentlichkeitsbeteiligung zur Neugestaltung des Kesselbrinks“ (und nicht „Buergerbeteiligung (!) Neugestaltung Kesselbrink“)
+
+1- -> DONE
+
+Änderung notwendig bei "erfolgreich gespeichert" = Meldung oben und unten auf der Seite anzeigen,
+nur oben = Seite "zu lang", siehtm amn kaum 
+
+ 
+    2. Review
+    • Reiter „Konzepttext“ umbenennen zu „Beteiligungskonzept“, Reiter „Antworten“ zu „Informationen“
+    • Änderungen, die wir im Konzept machen, sollten fürs Fachamt sichtbar sein 
+ 
+    3. Zum Prozess
+    • KI-Konzept für Fachamt nicht direkt sichtbar machen, sondern erst nach Bestätigung von Dialog & Beteiligung 
+    • Daher: den „neu generieren“-Button nur für Dialog & Beteiligung ermöglichen
+
+-> verworfen im Gespräch, Rückkopplung muss es geben 
+
+    • Nice to have: E-Mail-Benachrichtigungen (dialog@bielefeld.de wenn neues Konzept eingegangen oder Veränderungen; fachamtXY@bielefeld.de wenn KI-Konzept sichtbar oder Veränderungen) 
+ 
+-> eMail Server fehlt
+
+  
+Zwei Dinge wären super:
+ 
+    • Etwaige Einbindung (API) von Claude und/oder Mistral
+    • Editierbarer Prompt -> Done
+
+
+    erweiterbarer Prompt = Done
+
+    Claude oder Mistral einbinden
+    , wie?
+
+
+
+
+    Dinge, die bei der Bedienung auffallen:
+    
+    Es benötigt einen Weiter-Button unten rechts neben speichern, so dass der User auf die 
+    nächste Eingabeseite kommt.
+
+    Die kurz eingeblendete Anzeige, dass die Eingabe gespeichtert wurde, muss oben und unten gleichzeitig auf der
+    Formularseite erscheinen, nicht nur oben. Die Formulare gehen oft über eine Bildschrimhöhe hinaus.
+
+
+    Ablauf:
+    1. Fachamt erstellt über die Eingabeoberfläche und mit KI über Prompt ein Konzept.
+    2. Administration schriebt einen Kommentar, dass etwas zu ändern ist und nutzt "Zurückschicken" 
+    3. Das Fachamt sieht den Kommentar und erweitert und verbessert die Eingabe um die Anregungen der Administration 
+    und erzeugt per KI eine neue Version des Konzeptes und kommentiert noch mal die eigenen Änderungen über eine Kommentar
+    4. Fehler: Die Administration sieht anstelle des neuen Konzeptes den Kommentar. Der Kommentar erscheint auch unter "Kommentar".
+    Die Eintragungen unter "Informationen" passen.
+  
+    Bitte diesen Fehler korrigieren 
+
+
+    Im "Review" kann der Nutzerlevel Administration und Dialog&Beratung die von dem Fachamt per KI generierten Texte editieren.
+    Diese Änderungen sollen für das Fachamt nachvollziehbar sein.
+
+    Nach Beendigung des Editierens durch Administration oder Dialog&Beratung  soll ein DIFF zwischen alter und neuer Version  erzeugt werden.
+    Dieses kann vom Faachamt in einem weiteren Reiter unter "Änderungen" eingesehen werden. 
+    Das sollte eine  zweispaltige Seite sein. Links das, was das Fachamt erzeugt hat, rechts der geänderte Text von
+    Administration und Dialog&Beratung. In linken Text soll hellrot hinterlegt sein, was auf der rechten Seite  geändert wurde.
+    Auf der rechten Seite soll hellgrün hinterlegt werden, was geändert wurde.
+
+    -> DONE: sieht gut aus
+
+
+
+    in dieser selbst entwickelten APP mit KI anschluss über OpenRouter (ChatGPT oder claude) sollen lokal abgelegte Dateinen als Wissensbasis mit integriert werden.
+    Das sind nicht  sehr viele Dateien (evtl. 20; Tendenz wachsend). Trotzdem kann das sehr nützlich sein. 
+    Idealerweile kommen alle  in ein dediziertes Verzeichnis mit Unterverzeichnissen.
+
+    Ansatz wäre ein Einfaches File-Loading (ohne Vektordatenbank)
+    Für ~20 Dateien können alle Inhalte beim App-Start einlesen werden und direkt in den Kontext packen – kein Embedding, kein Vektorstore nötig.
+
+
+    Ich benötige dann im Admin Bereich ein extra  Upload Bereich, um die Wissensbasis zu füllen bzw.
+    Wachsen lassen zu können.
