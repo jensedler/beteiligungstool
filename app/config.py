@@ -12,8 +12,8 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-    OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o")
+    OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
+    OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "anthropic/claude-sonnet-4-6")
     KNOWLEDGE_BASE_DIR = os.environ.get(
         "KNOWLEDGE_BASE_DIR",
         os.path.join(basedir, "..", "instance", "knowledge_base")
