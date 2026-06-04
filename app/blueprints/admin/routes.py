@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.question import Section, Question
 from app.models.knowledge import KnowledgeDocument
 from app.models.prompt import SystemPrompt, SYSTEM_PROMPT_DEFAULT
+from app.services.knowledge_service import build_composed_prompt
 
 admin_bp = Blueprint("admin", __name__, template_folder="../../templates/admin")
 
@@ -157,86 +158,29 @@ def question_create(section_id):
     return render_template("admin_question_form.html", section=section, question=None)
 
 
-@admin_bp.route("/knowledge")
-@login_required
-@require_admin
-def knowledge():
-    base_dir = current_app.config.get("KNOWLEDGE_BASE_DIR", "")
-    files = list_files(base_dir)
-    return render_template("admin_knowledge.html", files=files,
-                           allowed=sorted(ALLOWED_EXTENSIONS))
-
-
-@admin_bp.route("/knowledge/upload", methods=["POST"])
-@login_required
-@require_admin
-def knowledge_upload():
-    base_dir = current_app.config.get("KNOWLEDGE_BASE_DIR", "")
-    subfolder = request.form.get("subfolder", "").strip().strip("/")
-    file = request.files.get("file")
-
-    if not file or not file.filename:
-        flash("Keine Datei ausgewählt.", "warning")
-        return redirect(url_for("admin.knowledge"))
-
-    ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        flash(f"Dateityp nicht erlaubt. Erlaubt: {', '.join(sorted(ALLOWED_EXTENSIONS))}", "danger")
-        return redirect(url_for("admin.knowledge"))
-
-    fname = secure_filename(file.filename)
-    rel = os.path.join(subfolder, fname) if subfolder else fname
-    target = safe_path(base_dir, rel)
-    if not target:
-        flash("Ungültiger Pfad.", "danger")
-        return redirect(url_for("admin.knowledge"))
-
-    os.makedirs(os.path.dirname(target), exist_ok=True)
-    file.save(target)
-    flash(f'"{rel}" erfolgreich hochgeladen.', "success")
-    return redirect(url_for("admin.knowledge"))
-
-
-@admin_bp.route("/knowledge/delete", methods=["POST"])
-@login_required
-@require_admin
-def knowledge_delete():
-    base_dir = current_app.config.get("KNOWLEDGE_BASE_DIR", "")
-    rel = request.form.get("rel_path", "")
-    target = safe_path(base_dir, rel)
-    if not target or not os.path.isfile(target):
-        flash("Datei nicht gefunden.", "danger")
-        return redirect(url_for("admin.knowledge"))
-    os.remove(target)
-    # remove empty parent dirs (but not base_dir itself)
-    parent = os.path.dirname(target)
-    while parent != os.path.realpath(base_dir):
-        try:
-            os.rmdir(parent)
-            parent = os.path.dirname(parent)
-        except OSError:
-            break
-    flash(f'"{rel}" gelöscht.', "info")
-    return redirect(url_for("admin.knowledge"))
-
-
 @admin_bp.route("/prompt", methods=["GET", "POST"])
 @login_required
 @require_admin
 def edit_prompt():
     row = db.session.get(SystemPrompt, 1)
     if row is None:
-        row = SystemPrompt(id=1, content=SYSTEM_PROMPT_DEFAULT)
+        row = SystemPrompt(id=1, content=SYSTEM_PROMPT_DEFAULT, use_knowledge_base=False)
         db.session.add(row)
         db.session.commit()
 
     if request.method == "POST":
         row.content = request.form.get("content", "").strip()
+        row.use_knowledge_base = request.form.get("use_knowledge_base") == "1"
         db.session.commit()
         flash("KI-Prompt gespeichert.", "success")
         return redirect(url_for("admin.edit_prompt"))
 
-    return render_template("admin_prompt.html", prompt=row)
+    docs = (KnowledgeDocument.query
+            .filter_by(is_active=True)
+            .order_by(KnowledgeDocument.priority, KnowledgeDocument.id)
+            .all())
+    composed = build_composed_prompt(row.content, docs) if docs else row.content
+    return render_template("admin_prompt.html", prompt=row, composed=composed, doc_count=len(docs))
 
 
 @admin_bp.route("/questions/<int:question_id>/edit", methods=["GET", "POST"])

@@ -64,6 +64,7 @@ class SystemPrompt(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False, default=SYSTEM_PROMPT_DEFAULT)
+    use_knowledge_base = db.Column(db.Boolean, nullable=False, default=False, server_default="0")
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -71,6 +72,10 @@ class SystemPrompt(db.Model):
     )
 
     @classmethod
-    def get(cls) -> str:
-        row = db.session.get(cls, 1)
+    def get(cls) -> "SystemPrompt | None":
+        return db.session.get(cls, 1)
+
+    @classmethod
+    def get_content(cls) -> str:
+        row = cls.get()
         return row.content if row else SYSTEM_PROMPT_DEFAULT

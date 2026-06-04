@@ -50,6 +50,40 @@ def list_files(base_dir: str) -> list:
     return result
 
 
+def build_composed_prompt(base: str, docs: list) -> str:
+    """
+    Compose system prompt with active KnowledgeDocument entries by priority:
+      prio 1–5   → prepended BEFORE the base prompt
+      prio 6–9   → inserted AFTER the base prompt (middle section)
+      prio 10+   → appended at the END
+    """
+    high = [d for d in docs if d.priority <= 5]
+    mid  = [d for d in docs if 6 <= d.priority <= 9]
+    low  = [d for d in docs if d.priority >= 10]
+
+    def _render(label: str, items: list) -> str:
+        lines = [f"## {label}\n"]
+        for doc in items:
+            header = f"### {doc.title}"
+            if doc.category:
+                header += f" [{doc.category}]"
+            lines.append(f"{header}\n{doc.content}")
+        return "\n\n".join(lines)
+
+    parts = []
+    if high:
+        parts.append(_render("Vorrangige Wissensdatenbank (Prio 1–5)", high))
+        parts.append("---")
+    parts.append(base)
+    if mid:
+        parts.append("---")
+        parts.append(_render("Ergänzende Wissensdatenbank (Prio 6–9)", mid))
+    if low:
+        parts.append("---")
+        parts.append(_render("Referenzmaterial (Prio 10+)", low))
+    return "\n\n".join(parts)
+
+
 def safe_path(base_dir: str, rel_path: str) -> str | None:
     """Resolve rel_path under base_dir; return None if it escapes base_dir."""
     target = os.path.realpath(os.path.join(base_dir, rel_path))

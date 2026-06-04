@@ -4,12 +4,17 @@ from flask import current_app
 
 from app.extensions import db
 from app.models.konzept import Konzept
+from app.models.knowledge import KnowledgeDocument
 from app.models.question import Section
-from app.models.prompt import SystemPrompt
-from app.services.knowledge_service import load_knowledge_base
+from app.models.prompt import SystemPrompt, SYSTEM_PROMPT_DEFAULT
+from app.services.knowledge_service import build_composed_prompt
 
 
 def _build_system_prompt() -> str:
+    row = SystemPrompt.get()
+    base = row.content if row else SYSTEM_PROMPT_DEFAULT
+    if not row or not row.use_knowledge_base:
+        return base
     try:
         docs = (
             KnowledgeDocument.query
@@ -18,21 +23,10 @@ def _build_system_prompt() -> str:
             .all()
         )
     except Exception:
-        return SYSTEM_PROMPT
+        return base
     if not docs:
-        return SYSTEM_PROMPT
-
-    parts = [SYSTEM_PROMPT, "\n\n---\n\n## Referenzmaterial und Wissensdatenbank\n"]
-    parts.append(
-        "Die folgenden Dokumente enthalten verbindliche Leitlinien, Methoden und Rahmenbedingungen "
-        "der Stadt Bielefeld. Berücksichtige diese Inhalte bei der Erstellung des Konzepts.\n"
-    )
-    for doc in docs:
-        header = f"### {doc.title}"
-        if doc.category:
-            header += f" [{doc.category}]"
-        parts.append(f"\n{header}\n{doc.content}\n")
-    return "\n".join(parts)
+        return base
+    return build_composed_prompt(base, docs)
 
 
 def generate_konzept_text(konzept: Konzept) -> str:
@@ -65,14 +59,7 @@ def generate_konzept_text(konzept: Konzept) -> str:
 
     context = "\n".join(context_parts)
 
-    knowledge = load_knowledge_base(current_app.config.get("KNOWLEDGE_BASE_DIR", ""))
-    knowledge_block = (
-        f"\n\nZusaetzliche Wissensbasis der Stadt Bielefeld "
-        f"(interne Dokumente, Leitfaeden, Standards):\n\n{knowledge}\n\n{'=' * 50}"
-        if knowledge else ""
-    )
-
-    user_prompt = f"""{context}{knowledge_block}
+    user_prompt = f"""{context}
 
 ---
 
@@ -87,7 +74,7 @@ Das Konzept soll als Arbeitsgrundlage fuer das Team Dialog & Beteiligung der Sta
     response = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": SystemPrompt.get()},
+            {"role": "system", "content": _build_system_prompt()},
             {"role": "user", "content": user_prompt},
         ],
         temperature=0.5,
