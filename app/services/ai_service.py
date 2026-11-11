@@ -78,7 +78,7 @@ Das Konzept soll als Arbeitsgrundlage fuer das Team Dialog & Beteiligung der Sta
             {"role": "user", "content": user_prompt},
         ],
         temperature=0.5,
-        max_tokens=4000,
+        max_tokens=64000,
     )
     return response.choices[0].message.content
 
